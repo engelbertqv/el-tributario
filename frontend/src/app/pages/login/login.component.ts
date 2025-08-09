@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, effect, inject, signal, computed } from '@angular/core';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, NonNullableFormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AuthService } from '../../../app/core/auth.service';
+import { AuthService } from '@core/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -30,10 +30,25 @@ import { AuthService } from '../../../app/core/auth.service';
     </div>
   `,
   styles: [`
-    .container { max-width: 420px; margin: 48px auto; background: #fff; padding: 24px; border-radius: 12px;
-                box-shadow: 0 6px 18px rgba(0,0,0,.06); }
+    .container {
+      width: min(95vw, 520px);
+      margin: 48px auto;
+      background: #fff;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,.06);
+    }
     label { display:block; margin: 10px 0 6px; }
-    input { width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:8px; }
+    input {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     input.invalid { border-color:#ef4444; }
     button { margin-top:12px; padding:10px 16px; border:0; background:#2563eb; color:#fff; border-radius:8px; }
     button[disabled] { background:#93c5fd; }
@@ -42,24 +57,27 @@ import { AuthService } from '../../../app/core/auth.service';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LoginComponent {
-  private readonly fb = inject(FormBuilder);
+  private readonly fb = inject(NonNullableFormBuilder);
   private readonly router = inject(Router);
-  protected readonly auth = inject(AuthService);
+  protected readonly auth = inject<AuthService>(AuthService);
 
-  protected readonly form = this.fb.nonNullable.group({
-    username: ['', [Validators.required]],
-    password: ['', [Validators.required, Validators.minLength(3)]],
+  protected readonly form = this.fb.group({
+    username: this.fb.control('', { validators: [Validators.required] }),
+    password: this.fb.control('', { validators: [Validators.required] }),
   });
 
   protected readonly submitted = signal(false);
-  protected readonly disableSubmit = computed(() => this.auth.loading() || this.form.invalid);
+  protected readonly disableSubmit = computed(() => this.auth.loading() || !this.form.valid);
+
+  // si ya hay token, no muestres login
+  readonly _autoRedirect = effect(() => {
+    if (this.auth.isAuthenticated()) this.router.navigateByUrl('/home');
+  });
 
   async submit(): Promise<void> {
     this.submitted.set(true);
-    if (this.form.invalid) return;
+    if (!this.form.valid) return;
     const ok = await this.auth.login(this.form.getRawValue());
-    if (ok) {
-      this.router.navigateByUrl('/home');
-    }
+    if (ok) this.router.navigateByUrl('/home');
   }
 }
