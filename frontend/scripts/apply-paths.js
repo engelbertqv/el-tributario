@@ -1,10 +1,14 @@
 /* apply-paths.js
- * Injects baseUrl + paths into tsconfig.json (supports JSON with comments in a naive way).
- * Usage: node scripts/apply-paths.js
+ * Injects baseUrl + path aliases into tsconfig.json (naive, supports JSON with comments).
+ * Usage: node frontend/scripts/apply-paths.js
  */
 const fs = require('fs');
 const path = require('path');
-const tsconfigPath = path.join(process.cwd(), 'tsconfig.json');
+const tsconfigPath = path.join(process.cwd(), 'frontend', 'tsconfig.json');
+if (!fs.existsSync(tsconfigPath)) {
+  console.error('[apply-paths] tsconfig.json not found at frontend/tsconfig.json');
+  process.exit(1);
+}
 let text = fs.readFileSync(tsconfigPath, 'utf8');
 const hasBaseUrl = /"baseUrl"\s*:/.test(text);
 const hasPaths = /"paths"\s*:/.test(text);
@@ -17,4 +21,4 @@ text = text.replace(
   `$1\n    "baseUrl": "src",\n    "paths": {\n      "@app/*": ["app/*"],\n      "@core/*": ["app/core/*"],\n      "@pages/*": ["app/pages/*"]\n    },`
 );
 fs.writeFileSync(tsconfigPath, text);
-console.log('[apply-paths] Injected baseUrl and paths into tsconfig.json');
+console.log('[apply-paths] Injected baseUrl and paths into frontend/tsconfig.json');
