@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { AuthService } from '../../../app/core/auth.service';
+import { AuthService } from '@core/auth.service';
 
 @Component({
   selector: 'app-home',
@@ -13,6 +13,6 @@ import { AuthService } from '../../../app/core/auth.service';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HomeComponent {
-  private readonly auth = inject(AuthService);
+  private readonly auth = inject<AuthService>(AuthService);
   logout(): void { this.auth.logout(); location.assign('/login'); }
 }

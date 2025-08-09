@@ -1,5 +1,7 @@
-
-/* apply-paths.js */
+/* apply-paths.js
+ * Injects baseUrl + paths into tsconfig.json (supports JSON with comments in a naive way).
+ * Usage: node scripts/apply-paths.js
+ */
 const fs = require('fs');
 const path = require('path');
 const tsconfigPath = path.join(process.cwd(), 'tsconfig.json');
